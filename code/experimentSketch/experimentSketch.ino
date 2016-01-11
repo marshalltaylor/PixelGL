@@ -39,20 +39,18 @@
 */
 
 #include <OctoWS2811.h>
+#include "hwLayer.h"
 
-const int ledsPerStrip = 120;
+const int ledsPerStrip = 256;
 
 DMAMEM int displayMemory[ledsPerStrip*6];
 int drawingMemory[ledsPerStrip*6];
 
 const int config = WS2811_GRB | WS2811_800kHz;
 
-OctoWS2811 leds(ledsPerStrip, displayMemory, drawingMemory, config);
+viewport leds(ledsPerStrip, displayMemory, drawingMemory, config, 32, 8);
 
-void setup() {
-  leds.begin();
-  leds.show();
-}
+viewpage mainPage(&leds);
 
 #define RED    0x0F0000
 #define GREEN  0x000F00
@@ -61,6 +59,26 @@ void setup() {
 #define PINK   0x0F0008
 #define ORANGE 0x080800
 #define WHITE  0x0F0F0F
+
+void setup() {
+	Serial.begin(9600);
+  leds.begin();
+  mainPage.setPixelXY(10,0,RED);
+  mainPage.setPixelXY(1,1,GREEN);
+  mainPage.setPixelXY(2,2,BLUE);
+  mainPage.setPixelXY(3,2,YELLOW);
+  mainPage.show();
+  delay(2000);
+  Serial.println("Started");
+  Serial.println(leds.width);
+  mainPage.viewpageMemory[0] = 'a';
+  mainPage.viewpageMemory[1] = 'b';
+  mainPage.viewpageMemory[2] = 'c';
+  mainPage.viewpageMemory[3] = '\0';
+  Serial.println((char*)mainPage.viewpageMemory);
+  Serial.println(mainPage.linkedViewport->width);
+  while(1);
+}
 
 void loop() {
   int microsec = 2000000 / leds.numPixels();  // change them all in 2 seconds
