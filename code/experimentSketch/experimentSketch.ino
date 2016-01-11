@@ -50,7 +50,10 @@ const int config = WS2811_GRB | WS2811_800kHz;
 
 viewport leds(ledsPerStrip, displayMemory, drawingMemory, config, 32, 8);
 
-viewpage mainPage(&leds);
+pGLObject myObject;
+
+
+viewpage mainPage(&leds, &myObject);
 
 #define RED    0x0F0000
 #define GREEN  0x000F00
@@ -60,46 +63,62 @@ viewpage mainPage(&leds);
 #define ORANGE 0x080800
 #define WHITE  0x0F0F0F
 
+float x1Delta = 1.2;
+float y1Delta = 1.3;
+float x2Delta = 1.1;
+float y2Delta = 1.4;
+
+float linex1 = 1;
+float liney1 = 2;
+float linex2 = 30;
+float liney2 = 7;
+
+Layer myLayer( 0,0,3,2 );
+
 void setup() {
+	myObject.setPoints( 1, 2, 30, 7 );
 	Serial.begin(9600);
   leds.begin();
   mainPage.setPixelXY(10,0,RED);
   mainPage.setPixelXY(1,1,GREEN);
   mainPage.setPixelXY(2,2,BLUE);
   mainPage.setPixelXY(3,2,YELLOW);
+  mainPage.setLayer( &myLayer, 0 );//Set myLayer as top
+  mainPage.setLayerOffset( 0, 2, 2 );//Position layer 0 at +2, +2
   mainPage.show();
   delay(2000);
   Serial.println("Started");
-  Serial.println(leds.width);
-  mainPage.viewpageMemory[0] = 'a';
-  mainPage.viewpageMemory[1] = 'b';
-  mainPage.viewpageMemory[2] = 'c';
-  mainPage.viewpageMemory[3] = '\0';
-  Serial.println((char*)mainPage.viewpageMemory);
-  Serial.println(mainPage.linkedViewport->width);
-  while(1);
+
 }
 
-void loop() {
-  int microsec = 2000000 / leds.numPixels();  // change them all in 2 seconds
-
-  // uncomment for voltage controlled speed
-  // millisec = analogRead(A9) / 40;
-
-  colorWipe(RED, microsec);
-  colorWipe(GREEN, microsec);
-  colorWipe(BLUE, microsec);
-  colorWipe(YELLOW, microsec);
-  colorWipe(PINK, microsec);
-  colorWipe(ORANGE, microsec);
-  colorWipe(WHITE, microsec);
-}
-
-void colorWipe(int color, int wait)
+void loop()
 {
-  for (int i=0; i < leds.numPixels(); i++) {
-    leds.setPixel(i, color);
-    leds.show();
-    delayMicroseconds(wait);
-  }
+	linex1 += x1Delta;
+	liney1 += y1Delta;
+	linex2 += x2Delta;
+	liney2 += y2Delta;
+
+	if(( linex1 >= 31 )||( linex1 <= 0 ))
+	{
+		x1Delta *= -1;
+	}
+	if(( linex2 >= 31 )||( linex2 <= 0 ))
+	{
+		x2Delta *= -1;
+	}
+	if(( liney1 >= 7 )||( liney1 <= 0 ))
+	{
+		y1Delta *= -1;
+	}
+	if(( liney2 >= 7 )||( liney2 <= 0 ))
+	{
+		y2Delta *= -1;
+	}
+	delay(200);
+	mainPage.clear();
+	myObject.setPoints( linex1, liney1, linex2, liney2 );
+  mainPage.setPixelXY(linex1, liney1,RED);
+  mainPage.setPixelXY(linex2, liney2,GREEN);  
+	mainPage.show();
 }
+
