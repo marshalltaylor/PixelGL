@@ -214,7 +214,17 @@ void viewpage::show( void )
 		{
 			setPixelXY( i + layers[0]->xOffset, j + layers[0]->yOffset, layers[0]->getPixelXY(i, j));
 		}
-	}	
+	}
+	//Now copy the layer memory over
+	for( int i = layers[1]->xLowerLimit; i <= layers[1]->xUpperLimit; i++ )
+	{
+		for( int j = layers[1]->yLowerLimit; j <= layers[1]->yUpperLimit; j++ )
+		{
+			setPixelXY( i + layers[1]->xOffset, j + layers[1]->yOffset, layers[1]->getPixelXY(i, j));
+		}
+	}
+	
+	
 	//Process our 1 temp object, pGLObject
 	//Step through x, find y
 	int32_t tempx1 = linkedObjectHead->x1;
@@ -250,7 +260,6 @@ void viewpage::show( void )
 			linkedViewport->setPixelXY( i, (7 - j), getPixelXY(i, j));
 		}
 	}
-	linkedViewport->setPixelXY(8,2,0x0F0000);
 	linkedViewport->show();
 }
 

@@ -74,20 +74,23 @@ float linex2 = 30;
 float liney2 = 7;
 
 Layer myLayer( 0,0,3,2 );
+Layer dotLayer( 0,0,5,5 );
 
 void setup() {
 	myObject.setPoints( 1, 2, 30, 7 );
 	Serial.begin(9600);
-  leds.begin();
-  mainPage.setPixelXY(10,0,RED);
-  mainPage.setPixelXY(1,1,GREEN);
-  mainPage.setPixelXY(2,2,BLUE);
-  mainPage.setPixelXY(3,2,YELLOW);
-  mainPage.setLayer( &myLayer, 0 );//Set myLayer as top
-  mainPage.setLayerOffset( 0, 2, 2 );//Position layer 0 at +2, +2
-  mainPage.show();
-  delay(2000);
-  Serial.println("Started");
+	leds.begin();
+	mainPage.setPixelXY(10,0,RED);
+	mainPage.setPixelXY(1,1,GREEN);
+	mainPage.setPixelXY(2,2,BLUE);
+	mainPage.setPixelXY(3,2,YELLOW);
+	mainPage.setLayer( &myLayer, 0 );//Set myLayer as top
+	mainPage.setLayer( &dotLayer, 1 );//
+	mainPage.setLayerOffset( 0, 2, 2 );//Position layer 0 at +2, +2
+	mainPage.setLayerOffset( 1, 5, 1 );//Position layer 0 at +2, +2
+	mainPage.show();
+	delay(2000);
+	Serial.println("Started");
 
 }
 
@@ -117,8 +120,8 @@ void loop()
 	delay(200);
 	mainPage.clear();
 	myObject.setPoints( linex1, liney1, linex2, liney2 );
-  mainPage.setPixelXY(linex1, liney1,RED);
-  mainPage.setPixelXY(linex2, liney2,GREEN);  
+	mainPage.setPixelXY(linex1, liney1,RED);
+	mainPage.setPixelXY(linex2, liney2,GREEN);  
 	mainPage.show();
 }
 
