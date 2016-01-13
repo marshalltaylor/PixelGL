@@ -41,6 +41,37 @@
 #include <OctoWS2811.h>
 #include "hwLayer.h"
 
+//Not used by this sketch but dependant on one 
+#include "Wire.h"
+
+//Globals
+uint32_t MAXTIMER = 60000000;
+uint32_t MAXINTERVAL = 2000000;
+
+#define LEDPIN 13
+#include "timerModule32.h"
+#include "stdint.h"
+
+IntervalTimer myTimer; //Interrupt for Teensy
+
+//**Copy to make a new timer******************//  
+//TimerClass32 usTimerA( 20000 ); //20 ms
+TimerClass32 debugTimer( 1000000 ); //20 ms
+TimerClass32 dotTimer( 5000 );
+TimerClass32 drawTimer( 100000 );
+
+uint32_t usTicks = 0;
+
+uint8_t usTicksLocked = 1; //start locked out
+
+uint8_t debugBlink = 0;
+
+
+
+
+
+
+
 const int ledsPerStrip = 256;
 
 DMAMEM int displayMemory[ledsPerStrip*6];
@@ -73,10 +104,23 @@ float liney1 = 2;
 float linex2 = 30;
 float liney2 = 7;
 
-Layer myLayer( 0,0,3,2 );
-Layer dotLayer( 0,0,5,5 );
+float x3Delta = .02;
+float y3Delta = .02;
+float dotx3 = 1;
+float doty3 = 2;
+
+
+
+Layer myLayer( 0,0,3,2, 1 );
+Layer dotLayer( 0,0,5,5, 1 );
+Layer fullLayer( 0,0,31,7, 0);
+
+PaintTools draw;
 
 void setup() {
+	delay(2000);
+	myTimer.begin(serviceUS, 1);  // serviceMS to run every 0.000001 seconds
+	Serial.println("Started");
 	myObject.setPoints( 1, 2, 30, 7 );
 	Serial.begin(9600);
 	leds.begin();
@@ -84,44 +128,112 @@ void setup() {
 	mainPage.setPixelXY(1,1,GREEN);
 	mainPage.setPixelXY(2,2,BLUE);
 	mainPage.setPixelXY(3,2,YELLOW);
+	draw.dot( &dotLayer, 2.3, 2.2, RED );
 	mainPage.setLayer( &myLayer, 0 );//Set myLayer as top
 	mainPage.setLayer( &dotLayer, 1 );//
+	mainPage.setLayer( &fullLayer, 2 );//
 	mainPage.setLayerOffset( 0, 2, 2 );//Position layer 0 at +2, +2
-	mainPage.setLayerOffset( 1, 5, 1 );//Position layer 0 at +2, +2
+	mainPage.setLayerOffset( 1, 8, 1 );//Position layer 0 at +2, +2
 	mainPage.show();
-	delay(2000);
-	Serial.println("Started");
+
 
 }
 
 void loop()
 {
-	linex1 += x1Delta;
-	liney1 += y1Delta;
-	linex2 += x2Delta;
-	liney2 += y2Delta;
+	//linex1 += x1Delta;
+	//liney1 += y1Delta;
+	//linex2 += x2Delta;
+	//liney2 += y2Delta;
+    //
+	//if(( linex1 >= 31 )||( linex1 <= 0 ))
+	//{
+	//	x1Delta *= -1;
+	//}
+	//if(( linex2 >= 31 )||( linex2 <= 0 ))
+	//{
+	//	x2Delta *= -1;
+	//}
+	//if(( liney1 >= 7 )||( liney1 <= 0 ))
+	//{
+	//	y1Delta *= -1;
+	//}
+	//if(( liney2 >= 7 )||( liney2 <= 0 ))
+	//{
+	//	y2Delta *= -1;
+	//}
+	//delay(200);
+	//mainPage.clear();
+	//myObject.setPoints( linex1, liney1, linex2, liney2 );
+	//mainPage.setPixelXY(linex1, liney1,RED);
+	//mainPage.setPixelXY(linex2, liney2,GREEN);  
+	//mainPage.show();
+	
+		//Update the timers, but only once per interrupt
+	if( usTicksLocked == 0 )
+	{
+		//**Copy to make a new timer******************//  
+		//msTimerA.update(usTicks);
+		
+		debugTimer.update(usTicks);
+		dotTimer.update(usTicks);
+		drawTimer.update(usTicks);
+		//Done?  Lock it back up
+		usTicksLocked = 1;
+	}  //The ISR will unlock.
 
-	if(( linex1 >= 31 )||( linex1 <= 0 ))
+	
+	if(debugTimer.flagStatus() == PENDING)
 	{
-		x1Delta *= -1;
+		//User code
+		debugBlink ^= 0x01;
 	}
-	if(( linex2 >= 31 )||( linex2 <= 0 ))
+	if(dotTimer.flagStatus() == PENDING)
 	{
-		x2Delta *= -1;
+		//User code
+		dotx3 += x3Delta;
+		doty3 += y3Delta;
+	
+		if(( dotx3 >= 31 )||( dotx3 <= 0 ))
+		{
+			x3Delta *= -1;
+		}
+		if(( doty3 >= 7 )||( doty3 <= 0 ))
+		{
+			y3Delta *= -1;
+		}
 	}
-	if(( liney1 >= 7 )||( liney1 <= 0 ))
+	if(drawTimer.flagStatus() == PENDING)
 	{
-		y1Delta *= -1;
+		//User code
+		fullLayer.clear();
+		if( debugBlink )
+		{
+			fullLayer.setPixelXY(0,0,RED);
+		}
+		else
+		{
+			fullLayer.setPixelXY(0,0,0);
+		}
+		draw.dot( &fullLayer, dotx3, doty3, RED );
+		mainPage.show();
 	}
-	if(( liney2 >= 7 )||( liney2 <= 0 ))
-	{
-		y2Delta *= -1;
-	}
-	delay(200);
-	mainPage.clear();
-	myObject.setPoints( linex1, liney1, linex2, liney2 );
-	mainPage.setPixelXY(linex1, liney1,RED);
-	mainPage.setPixelXY(linex2, liney2,GREEN);  
-	mainPage.show();
+	
 }
 
+
+void serviceUS(void)
+{
+  uint32_t returnVar = 0;
+  if(usTicks >= ( MAXTIMER + MAXINTERVAL ))
+  {
+    returnVar = usTicks - MAXTIMER;
+
+  }
+  else
+  {
+    returnVar = usTicks + 1;
+  }
+  usTicks = returnVar;
+  usTicksLocked = 0;  //unlock
+}

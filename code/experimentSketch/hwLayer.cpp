@@ -1,4 +1,5 @@
 #include "hwLayer.h"
+#include <math.h>
 
 //**********************************************************************//
 //
@@ -69,7 +70,33 @@ Layer::Layer( int32_t xLVar, int32_t yLVar, int32_t xUVar, int32_t yUVar)
 	layerMemory = new uint8_t[arraySize];   // Allocate memory for the variable
 	for( int i = 0; i < arraySize; i++ )
 	{
-		layerMemory[i] = ((float)i / (float)arraySize * 7) + 1;
+		layerMemory[i] = 0;
+	}
+	
+}
+
+Layer::Layer( int32_t xLVar, int32_t yLVar, int32_t xUVar, int32_t yUVar, uint8_t debugFlag)
+{
+	xOffset = 0;
+	yOffset = 0;
+	xLowerLimit = xLVar;
+	xUpperLimit = xUVar;
+	yLowerLimit = yLVar;
+	yUpperLimit = yUVar;
+	width = xUpperLimit - xLowerLimit + 1;
+	height = yUpperLimit - yLowerLimit + 1;
+	uint32_t arraySize = width*height*3;
+	layerMemory = new uint8_t[arraySize];   // Allocate memory for the variable
+	for( int i = 0; i < arraySize; i++ )
+	{
+		if(debugFlag)
+		{
+			layerMemory[i] = ((float)i / (float)arraySize * 7) + 1;
+		}
+		else
+		{
+			layerMemory[i] = 0;
+		}
 	}
 	
 }
@@ -79,7 +106,7 @@ void Layer::clear( void )
 	uint32_t arraySize = width*height*3;
 	for( int i = 0; i < arraySize; i++ )
 	{
-		layerMemory[i] = ((float)i / (float)arraySize * 7) + 1;
+		layerMemory[i] = 0;
 	}
 	
 }
@@ -223,7 +250,14 @@ void viewpage::show( void )
 			setPixelXY( i + layers[1]->xOffset, j + layers[1]->yOffset, layers[1]->getPixelXY(i, j));
 		}
 	}
-	
+	//Now copy the layer memory over
+	for( int i = layers[2]->xLowerLimit; i <= layers[2]->xUpperLimit; i++ )
+	{
+		for( int j = layers[2]->yLowerLimit; j <= layers[2]->yUpperLimit; j++ )
+		{
+			setPixelXY( i + layers[2]->xOffset, j + layers[2]->yOffset, layers[2]->getPixelXY(i, j));
+		}
+	}	
 	
 	//Process our 1 temp object, pGLObject
 	//Step through x, find y
@@ -276,9 +310,49 @@ void viewpage::setLayerOffset( uint8_t layerVar, int32_t xOffsetVar, int32_t yOf
 	
 }
 
+//**********************************************************************//
+//
+//  Painting Tools
+//
+//**********************************************************************//
 
+PaintTools::PaintTools( void )
+{
+	
+}
 
-
+void PaintTools::dot( Layer* inputLayer, float xVar, float yVar, int colorVar )
+{
+	//Identify the nearest pixel
+	float nearestX = (int)xVar;
+	float nearestY = (int)yVar;
+	if(xVar > nearestX + 0.5)
+	{
+		nearestX += 1;
+	}
+	if(yVar > nearestY + 0.5)
+	{
+		nearestY += 1;
+	}
+	//Now, calculate the distance from a range around this center most pixel to all the others
+	float bScalar;
+	uint8_t R = colorVar >> 16;
+	uint8_t G = colorVar >> 8;
+	uint8_t B = colorVar;
+	uint32_t outColor = 0;
+	for(int j = nearestY - 1; j <= nearestY + 1; j++)
+	{
+		for(int i = nearestX - 1; i <= nearestX + 1; i++)
+		{
+			float distance = sqrt(pow(((float)i - xVar), 2) + pow(((float)j-yVar), 2));
+			Serial.println(distance);
+			//Create a brightness mask
+			bScalar = pow(((2 - distance) / 2 ), 2);
+			outColor = (uint8_t)( B * bScalar ) | (uint8_t)( G * bScalar ) << 8 | (uint8_t)( R * bScalar ) <<16;
+			inputLayer->setPixelXY( i, j, outColor );
+		}
+	}
+}
 
 
 

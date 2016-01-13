@@ -40,6 +40,7 @@ class Layer
 {
 public:
 	Layer( int32_t, int32_t, int32_t, int32_t );
+	Layer( int32_t, int32_t, int32_t, int32_t, uint8_t );
 	void clear( void );
 	void setPixelXY( int32_t x, int32_t y, int color );
 	int64_t getPixelXY( int32_t x, int32_t y );
@@ -84,6 +85,14 @@ public:
 	
 };
 
-
+class PaintTools
+{
+public:
+	PaintTools( void );
+	void dot( Layer*, float, float, int );
+	
+	
+	
+};
 
 #endif
