@@ -91,7 +91,7 @@ class PaintTools
 public:
 	PaintTools( void );
 	void dot( Layer*, float, float, RGBA8* );
-	
+	void line( Layer*, float, float, float, float, RGBA8* );	
 	
 	
 };

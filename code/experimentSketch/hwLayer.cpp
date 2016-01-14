@@ -44,7 +44,7 @@ Layer::Layer( int32_t xLVar, int32_t yLVar, int32_t xUVar, int32_t yUVar)
 	height = yUpperLimit - yLowerLimit + 1;
 	uint32_t arraySize = width*height;
 	layerMemory = new RGBA8[arraySize];   // Allocate memory for the variable
-	for( int i = 0; i < arraySize; i++ )
+	for( int i = 0; i < (int)arraySize; i++ )
 	{
 		layerMemory[i].red = 0;
 		layerMemory[i].green = 0;
@@ -57,7 +57,7 @@ Layer::Layer( int32_t xLVar, int32_t yLVar, int32_t xUVar, int32_t yUVar)
 void Layer::clear( void )
 {
 	uint32_t arraySize = width*height;
-	for( int i = 0; i < arraySize; i++ )
+	for( int i = 0; i < (int)arraySize; i++ )
 	{
 		layerMemory[i].red = 0;
 		layerMemory[i].green = 0;
@@ -71,9 +71,9 @@ void Layer::debugClear( void )
 {
 	uint8_t fill;
 	uint32_t arraySize = width*height;
-	for( int i = 0; i < arraySize; i++ )
+	for( int i = 0; i < (int)arraySize; i++ )
 	{
-		fill = ((float)i / (float)arraySize * 20) + 1;
+		fill = ((float)i / (float)arraySize * 12) + 1;
 		layerMemory[i].red = 255;
 		layerMemory[i].green = 255;
 		layerMemory[i].blue = 255;
@@ -84,6 +84,10 @@ void Layer::debugClear( void )
 
 void Layer::setPixelXY(int32_t x, int32_t y, RGBA8* color)
 {
+	if( x < xLowerLimit ) x = xLowerLimit;
+	if( x > xUpperLimit ) x = xUpperLimit;
+	if( y < yLowerLimit ) y = yLowerLimit;
+	if( y > yUpperLimit ) y = yUpperLimit;
 	//Data is organized as rows, offset width
 	//offset x
 	int32_t tempx = x - xLowerLimit;
@@ -97,6 +101,10 @@ void Layer::setPixelXY(int32_t x, int32_t y, RGBA8* color)
 
 void Layer::getPixelXY(int32_t x, int32_t y, RGBA8* color)
 {
+	if( x < xLowerLimit ) x = xLowerLimit;
+	if( x > xUpperLimit ) x = xUpperLimit;
+	if( y < yLowerLimit ) y = yLowerLimit;
+	if( y > yUpperLimit ) y = yUpperLimit;
 	//Data is organized as rows, offset width
 	int32_t tempx = x - xLowerLimit;
 	int32_t tempy = y - yLowerLimit;
@@ -150,15 +158,15 @@ void Layer::process( void )
 viewpage::viewpage( viewport* inputViewport )
 {
 	linkedViewport = inputViewport;
-	xLowerLimit = -20;
-	xUpperLimit =  50;
-	yLowerLimit = -20;
-	yUpperLimit =  50;
+	xLowerLimit = -10;
+	xUpperLimit =  42;
+	yLowerLimit = -10;
+	yUpperLimit =  42;
 	width = xUpperLimit - xLowerLimit + 1;
 	height = yUpperLimit - yLowerLimit + 1;
 	uint32_t arraySize = width*height;
 	viewpageMemory = new RGBA8[arraySize];   // Allocate memory for the variable
-	for( int i = 0; i < arraySize; i++ )
+	for( int i = 0; i < (int)arraySize; i++ )
 	{
 		viewpageMemory[i].red = 0;
 		viewpageMemory[i].green = 0;
@@ -171,7 +179,7 @@ viewpage::viewpage( viewport* inputViewport )
 void viewpage::clear( void )
 {
 	uint32_t arraySize = width*height;
-	for( int i = 0; i < arraySize; i++ )
+	for( int i = 0; i < (int)arraySize; i++ )
 	{
 		viewpageMemory[i].red = 0;
 		viewpageMemory[i].green = 0;
@@ -183,6 +191,10 @@ void viewpage::clear( void )
 
 void viewpage::setPixelXY(int32_t x, int32_t y, RGBA8* color)
 {
+	if( x < xLowerLimit ) x = xLowerLimit;
+	if( x > xUpperLimit ) x = xUpperLimit;
+	if( y < yLowerLimit ) y = yLowerLimit;
+	if( y > yUpperLimit ) y = yUpperLimit;	
 	//Data is organized as rows, offset width
 	//offset x
 	int32_t tempx = x - xLowerLimit;
@@ -196,11 +208,13 @@ void viewpage::setPixelXY(int32_t x, int32_t y, RGBA8* color)
 
 void viewpage::getPixelXY(int32_t x, int32_t y, RGBA8* color)
 {
-	
+	if( x < xLowerLimit ) x = xLowerLimit;
+	if( x > xUpperLimit ) x = xUpperLimit;
+	if( y < yLowerLimit ) y = yLowerLimit;
+	if( y > yUpperLimit ) y = yUpperLimit;	
 	//Data is organized as rows, offset width
 	int32_t tempx = x - xLowerLimit;
 	int32_t tempy = y - yLowerLimit;
-	uint64_t tempColor = 0;
 	color->red = viewpageMemory[(tempy * width + tempx)].red;
 	color->green = viewpageMemory[(tempy * width + tempx)].green;
 	color->blue = viewpageMemory[(tempy * width + tempx)].blue;
@@ -216,17 +230,17 @@ void viewpage::show( void )
 	//Process top layer
 	layers[0]->process(); //Does nothing
 	//Now copy the layer memory over
-	for( int layi = 0; layi < 3; layi++)
+	for( int layi = 0; layi < 4; layi++ )
 	{
-		for( int i = layers[layi]->xLowerLimit; i <= layers[layi]->xUpperLimit; i++ )
+		for( int j = layers[layi]->yLowerLimit; j <= layers[layi]->yUpperLimit; j++ )
 		{
-			for( int j = layers[layi]->yLowerLimit; j <= layers[layi]->yUpperLimit; j++ )
+			for( int i = layers[layi]->xLowerLimit; i <= layers[layi]->xUpperLimit; i++ )
 			{
 				layers[layi]->getPixelXY(i, j, &newPixel);
 				//old:
 				//setPixelXY( i + layers[layi]->xOffset, j + layers[layi]->yOffset, &tempPixel);
 				//new:
-				getPixelXY(i, j, &underPixel);
+				getPixelXY(i + layers[layi]->xOffset, j + layers[layi]->yOffset, &underPixel);
 				outPixel.red = (((uint16_t)newPixel.red * (uint16_t)newPixel.alpha) >> 8 ) + (((uint16_t)underPixel.red * ( (uint16_t)256 - newPixel.alpha)) >> 8 );
 				outPixel.green = (((uint16_t)newPixel.green * (uint16_t)newPixel.alpha) >> 8 ) + (((uint16_t)underPixel.green * ( (uint16_t)256 - newPixel.alpha)) >> 8 );
 				outPixel.blue = (((uint16_t)newPixel.blue * (uint16_t)newPixel.alpha) >> 8 ) + (((uint16_t)underPixel.blue * ( (uint16_t)256 - newPixel.alpha)) >> 8 );
@@ -235,53 +249,6 @@ void viewpage::show( void )
 			}
 		}
 	}
-//mainPage[i].red = (((uint16_t)inputColorMatrix[i].red * (uint16_t)inputColorMatrix[i].alpha) >> 8 ) + (((uint16_t)mainPage[i].red * ( (uint16_t)256 - inputColorMatrix[i].alpha)) >> 8 );
-	////Now copy the layer memory over
-	//for( int i = layers[1]->xLowerLimit; i <= layers[1]->xUpperLimit; i++ )
-	//{
-	//	for( int j = layers[1]->yLowerLimit; j <= layers[1]->yUpperLimit; j++ )
-	//	{
-	//		layers[1]->getPixelXY(i, j, &tempPixel);
-	//		setPixelXY( i + layers[1]->xOffset, j + layers[1]->yOffset, &tempPixel);
-	//	}
-	//}
-	////Now copy the layer memory over
-	//for( int i = layers[2]->xLowerLimit; i <= layers[2]->xUpperLimit; i++ )
-	//{
-	//	for( int j = layers[2]->yLowerLimit; j <= layers[2]->yUpperLimit; j++ )
-	//	{
-	//		layers[2]->getPixelXY(i, j, &tempPixel);
-	//		setPixelXY( i + layers[2]->xOffset, j + layers[2]->yOffset, &tempPixel);
-	//	}
-	//}	
-	
-	////Process our 1 temp object, pGLObject
-	////Step through x, find y
-	//int32_t tempx1 = linkedObjectHead->x1;
-	//int32_t tempy1 = linkedObjectHead->y1;
-	//int32_t tempx2 = linkedObjectHead->x2;
-	//int32_t tempy2 = linkedObjectHead->y2;
-	//if( tempx2 < tempx1)
-	//{
-	//	int32_t temp = tempx2;
-	//	tempx2 = tempx1;
-	//	tempx1 = temp;
-	//}
-	////if( tempy2 < tempy1)
-	////{
-	////	int32_t temp = tempy2;
-	////	tempy2 = tempy1;
-	////	tempy1 = temp;
-	////}
-	//int xSpan = tempx2 - tempx1;
-	//int ySpan = tempy2 - tempy1;
-	//for( int i = tempx1; i < tempx2; i++)
-	//{
-	//	//interpolate y
-	//	float xpercent = (i - (float)tempx1)/(float)xSpan;
-	//	float yloc = tempy1 + (float)ySpan * xpercent;
-	//	setPixelXY(i, yloc, 0x080808);
-	//}
 	//For now, hardcode quadrant 1
 	RGBA8 tempPixel;
 	for( int i = 0; i < 32; i++ )
@@ -363,5 +330,85 @@ void PaintTools::dot( Layer* inputLayer, float xVar, float yVar, RGBA8* colorVar
 	}
 }
 
+void PaintTools::line( Layer* inputLayer, float x1Var, float y1Var, float x2Var, float y2Var, RGBA8* colorVar )
+{
+	//Swap to make sure (x,y)1 has a more negative x
+	float temp;
+	if( x2Var < x1Var )
+	{
+		temp = x2Var;
+		x2Var = x1Var;
+		x1Var = temp;
 
+		temp = y2Var;
+		y2Var = y1Var;
+		y1Var = temp;
+
+	}	
+	
+	//Identify the nearest pixel
+	float xSpan = x2Var - x1Var;
+	if( xSpan < 0 ) xSpan *= -1;
+	float ySpan = y2Var - y1Var;
+//	if( ySpan < 0 ) ySpan *= -1;
+	float length = sqrt(pow(xSpan, 2) + pow(ySpan, 2));
+	float xDelta = xSpan / length / 2 + 0.001;
+	float yDelta = ySpan / length / 2 + 0.001;
+	//Serial.println(xDelta);
+//	float xDelta = xSpan / 5;
+//	float yDelta = ySpan / 5;
+
+	
+	
+	
+	float xi = x1Var;
+	float yi = y1Var;
+	while( xi <= x2Var )
+	{
+	
+		//Identify the nearest pixel
+		float nearestX = (int)xi;
+		float nearestY = (int)yi;
+		if(xi > nearestX + 0.5)
+		{
+			nearestX += 1;
+		}
+		if(yi > nearestY + 0.5)
+		{
+			nearestY += 1;
+		}
+		//Now, calculate the distance from a range around this center most pixel to all the others
+		float bScalar;
+		RGBA8 outColor;
+		RGBA8 layerColor;
+		outColor.red = colorVar->red;
+		outColor.green = colorVar->green;
+		outColor.blue = colorVar->blue;
+		outColor.alpha = colorVar->alpha;
+		
+		for(int j = nearestY - 1; j <= nearestY + 1; j++)
+		{
+			for(int i = nearestX - 1; i <= nearestX + 1; i++)
+			{
+				float distance = sqrt(pow(((float)i - xi), 2) + pow(((float)j-yi), 2));
+				bScalar = pow(((2 - distance) / 2 ), 2);
+				outColor.red = bScalar * (float)colorVar->red;
+				outColor.green = bScalar * (float)colorVar->green;
+				outColor.blue = bScalar * (float)colorVar->blue;
+				outColor.alpha = 255;
+				//read the existing pixel
+				inputLayer->getPixelXY( i, j, &layerColor );
+				if( layerColor.red > outColor.red ) outColor.red = layerColor.red;
+				if( layerColor.green > outColor.green ) outColor.green = layerColor.green;
+				if( layerColor.blue > outColor.blue ) outColor.blue = layerColor.blue;
+				//output pixel
+				inputLayer->setPixelXY( i, j, &outColor );
+				
+			}
+		}
+		//inputLayer->setPixelXY( xi, yi, colorVar );
+		xi += xDelta;
+		yi += yDelta;
+	}
+}
 

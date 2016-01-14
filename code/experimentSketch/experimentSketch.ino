@@ -93,30 +93,27 @@ viewpage mainPage(&leds);
 #define ORANGE 0x080800
 #define WHITE  0x0F0F0F
 
-float x1Delta = 1.2;
-float y1Delta = 1.3;
-float x2Delta = 1.1;
-float y2Delta = 1.4;
+float xBallDelta[15] = {0.012,0.023,0.015,0.032,0.008,0.054,0.023,0.028,0.024,0.018,0.032,0.011,0.012,0.013,0.014};
+float yBallDelta[15] = {0.013,0.020,0.008,0.054,0.023,0.028,0.024,0.018,0.032,0.011,0.012,0.013,0.014,0.032,0.008};
 
-float linex1 = 1;
-float liney1 = 2;
-float linex2 = 30;
-float liney2 = 7;
+float xBall[15] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+float yBall[15] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
-float x3Delta = .02;
-float y3Delta = .02;
-float dotx3 = 1;
-float doty3 = 2;
+float x1Delta = .02;
+float y1Delta = .02;
+float dotx1 = 1;
+float doty1 = 2;
 
-float x4Delta = .03;
-float y4Delta = .04;
-float dotx4 = 1;
-float doty4 = 2;
+float x2Delta = .03;
+float y2Delta = .04;
+float dotx2 = 1;
+float doty2 = 2;
 
 
 Layer myLayer( 0,0,3,2 );
 Layer dotLayer( 0,0,5,5 );
-Layer fullLayer( 0,0,40,10 );
+Layer lineLayer( -2,-2,34,10 );
+Layer fullLayer( -2,-2,34,10 );
 
 PaintTools draw;
 
@@ -137,13 +134,15 @@ void setup() {
 	//draw.dot( &dotLayer, 2.3, 2.2, RED );
 	mainPage.setLayer( &myLayer, 0 );//Set myLayer as top
 	mainPage.setLayer( &dotLayer, 1 );//
-	mainPage.setLayer( &fullLayer, 2 );//
-	mainPage.setLayerOffset( 0, 3, 2 );//Position layer 0 at +2, +2
+	mainPage.setLayer( &lineLayer, 2 );//
+	mainPage.setLayer( &fullLayer, 3 );//
+	mainPage.setLayerOffset( 0, 2, 0 );//Position layer 0 at +2, +2
 	mainPage.setLayerOffset( 1, 6, 1 );//Position layer 0 at +2, +2
 	mainPage.setLayerOffset( 2, 0, 0 );//Position layer 0 at +2, +2
+	mainPage.setLayerOffset( 3, 0, 0 );
 	
-	myLayer.debugClear();
-	dotLayer.debugClear();
+	myLayer.clear();
+	dotLayer.clear();
 	mainPage.show();
 	Serial.println("Setup loop completing.");
 		RGBA8 tempColor;
@@ -207,41 +206,92 @@ void loop()
 	{
 		//User code
 		debugBlink ^= 0x01;
+		Serial.print("Free ram:");
+		Serial.println(FreeRam());
 	}
 	if(dotTimer.flagStatus() == PENDING)
 	{
 		//User code
-		dotx3 += x3Delta;
-		doty3 += y3Delta;
+		dotx1 += x1Delta;
+		doty1 += y1Delta;
 	
-		if(( dotx3 >= 31 )||( dotx3 <= 0 ))
+		if(( dotx1 >= 31 )||( dotx1 <= 0 ))
 		{
-			x3Delta *= -1;
+			x1Delta *= -1;
 		}
-		if(( doty3 >= 7 )||( doty3 <= 0 ))
+		if(( doty1 >= 15 )||( doty1 <= -4 ))
 		{
-			y3Delta *= -1;
+			y1Delta *= -1;
 		}
 		
-		dotx4 += x4Delta;
-		doty4 += y4Delta;
+		dotx2 += x2Delta;
+		doty2 += y2Delta;
 	
-		if(( dotx4 >= 31 )||( dotx4 <= 0 ))
+		if(( dotx2 >= 31 )||( dotx2 <= 0 ))
 		{
-			x4Delta *= -1;
+			x2Delta *= -1;
 		}
-		if(( doty4 >= 7 )||( doty4 <= 0 ))
+		if(( doty2 >= 15 )||( doty2 <= -4 ))
 		{
-			y4Delta *= -1;
+			y2Delta *= -1;
 		}
+		
+		for( int i = 0; i < 15; i++ )
+		{
+			xBall[i] += xBallDelta[i];
+			yBall[i] += yBallDelta[i];
+			if(( xBall[i] >= 31 )||( xBall[i] < 0 ))
+			{
+				xBallDelta[i] *= -1;
+			}
+			yBall[i] += yBallDelta[i];
+			if(( yBall[i] >= 15 )||( yBall[i] < -4 ))
+			{
+				yBallDelta[i] *= -1;
+			}			
+		}		
+		
 	}
 	if(drawTimer.flagStatus() == PENDING)
 	{
 		//User code
+		mainPage.clear();
+		lineLayer.clear();
 		fullLayer.clear();
+
+		//Balls
+		tempColor.red = 12;
+		tempColor.green = 5;
+		tempColor.blue = 10;
+		tempColor.alpha = 255;
+		for( int i = 0; i < 15; i++ )
+		{
+			draw.dot( &fullLayer, xBall[i], yBall[i], &tempColor );
+		}
+		
+		//Line
+		tempColor.red = 12;
+		tempColor.green = 12;
+		tempColor.blue = 12;
+		tempColor.alpha = 255;
+		draw.line( &lineLayer, dotx1, doty1, dotx2, doty2, &tempColor );
+		
+		tempColor.red = 32;
+		tempColor.green = 0;
+		tempColor.blue = 0;
+		tempColor.alpha = 255;
+		draw.dot( &fullLayer, dotx1, doty1, &tempColor );
+		
+		tempColor.red = 0;
+		tempColor.green = 32;
+		tempColor.blue = 0;
+		tempColor.alpha = 255;
+		draw.dot( &fullLayer, dotx2, doty2, &tempColor );
+		
+		//debug
 		if( debugBlink )
 		{
-			tempColor.red = 100;
+			tempColor.red = 20;
 			tempColor.green = 0;
 			tempColor.blue = 0;
 			tempColor.alpha = 255;
@@ -253,21 +303,7 @@ void loop()
 			tempColor.blue = 0;
 			tempColor.alpha = 255;
 		}
-		mainPage.clear();
-		fullLayer.clear();
 		fullLayer.setPixelXY(0,0, &tempColor);
-		
-		tempColor.red = 32;
-		tempColor.green = 0;
-		tempColor.blue = 0;
-		tempColor.alpha = 255;
-		draw.dot( &fullLayer, dotx3, doty3, &tempColor );
-		
-		tempColor.red = 0;
-		tempColor.green = 32;
-		tempColor.blue = 0;
-		tempColor.alpha = 255;
-		draw.dot( &fullLayer, dotx4, doty4, &tempColor );
 		
 		mainPage.show();
 	}
@@ -289,4 +325,24 @@ void serviceUS(void)
   }
   usTicks = returnVar;
   usTicksLocked = 0;  //unlock
+}
+
+#ifdef __arm__
+    // should use uinstd.h to define sbrk but Due causes a conflict
+    extern "C" char* sbrk(int incr);
+#else  // __ARM__
+    extern char *__brkval;
+    extern char __bss_end;
+#endif  // __arm__
+
+// function from the sdFat library (SdFatUtil.cpp)
+// licensed under GPL v3
+// Full credit goes to William Greiman.
+int FreeRam() {
+    char top;
+    #ifdef __arm__
+        return &top - reinterpret_cast<char*>(sbrk(0));
+    #else  // __arm__
+        return __brkval ? &top - __brkval : &top - &__bss_end;
+    #endif  // __arm__
 }
