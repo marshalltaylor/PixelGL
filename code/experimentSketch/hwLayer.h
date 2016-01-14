@@ -10,10 +10,11 @@ public:
   uint8_t green;
   uint8_t blue;
   uint8_t alpha;
-  
-  RGBA8( void );
-  void clear( void );
+
 };
+
+#define PIXELMEMSIZE sizeof(RGBA8)
+
 
 class viewport : public OctoWS2811
 {
@@ -25,25 +26,25 @@ public:
 	uint32_t height;
 };
 
-class pGLObject
-{
-public:
-	pGLObject( void );
-	void setPoints( int32_t, int32_t, int32_t, int32_t );
-	int32_t x1;
-	int32_t x2;
-	int32_t y1;
-	int32_t y2;
-};
+//class pGLObject
+//{
+//public:
+//	pGLObject( void );
+//	void setPoints( int32_t, int32_t, int32_t, int32_t );
+//	int32_t x1;
+//	int32_t x2;
+//	int32_t y1;
+//	int32_t y2;
+//};
 
 class Layer
 {
 public:
 	Layer( int32_t, int32_t, int32_t, int32_t );
-	Layer( int32_t, int32_t, int32_t, int32_t, uint8_t );
 	void clear( void );
-	void setPixelXY( int32_t x, int32_t y, int color );
-	int64_t getPixelXY( int32_t x, int32_t y );
+	void debugClear( void );
+	void setPixelXY( int32_t x, int32_t y, RGBA8* color );
+	void getPixelXY( int32_t x, int32_t y, RGBA8*);
 	void process( void );
 //private
 	int32_t xLowerLimit;
@@ -53,7 +54,7 @@ public:
 	int32_t width;
 	int32_t height;
 	
-	uint8_t* layerMemory;
+	RGBA8* layerMemory;
 	int32_t xOffset;
 	int32_t yOffset;
 	
@@ -62,10 +63,10 @@ public:
 class viewpage
 {
 public:
-	viewpage( viewport*, pGLObject* );
+	viewpage( viewport* );
 	void clear( void );
-	void setPixelXY( int32_t x, int32_t y, int color );
-	int64_t getPixelXY( int32_t x, int32_t y );
+	void setPixelXY( int32_t x, int32_t y, RGBA8* color );
+	void getPixelXY( int32_t x, int32_t y, RGBA8* );
 	void show( void );
 	void setLayer( Layer*, uint8_t );
 	void setLayerOffset( uint8_t, int32_t, int32_t );
@@ -77,9 +78,9 @@ public:
 	int32_t yUpperLimit;
 	int32_t width;
 	int32_t height;
-	uint8_t* viewpageMemory;
+	RGBA8* viewpageMemory;
 	viewport* linkedViewport;
-	pGLObject* linkedObjectHead;
+	//pGLObject* linkedObjectHead;
 	
 	Layer* layers[10];
 	
@@ -89,7 +90,7 @@ class PaintTools
 {
 public:
 	PaintTools( void );
-	void dot( Layer*, float, float, int );
+	void dot( Layer*, float, float, RGBA8* );
 	
 	
 	

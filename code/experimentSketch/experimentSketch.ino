@@ -81,10 +81,9 @@ const int config = WS2811_GRB | WS2811_800kHz;
 
 viewport leds(ledsPerStrip, displayMemory, drawingMemory, config, 32, 8);
 
-pGLObject myObject;
 
 
-viewpage mainPage(&leds, &myObject);
+viewpage mainPage(&leds);
 
 #define RED    0x0F0000
 #define GREEN  0x000F00
@@ -109,38 +108,59 @@ float y3Delta = .02;
 float dotx3 = 1;
 float doty3 = 2;
 
+float x4Delta = .03;
+float y4Delta = .04;
+float dotx4 = 1;
+float doty4 = 2;
 
 
-Layer myLayer( 0,0,3,2, 1 );
-Layer dotLayer( 0,0,5,5, 1 );
-Layer fullLayer( 0,0,31,7, 0);
+Layer myLayer( 0,0,3,2 );
+Layer dotLayer( 0,0,5,5 );
+Layer fullLayer( 0,0,40,10 );
 
 PaintTools draw;
 
 void setup() {
 	delay(2000);
-	myTimer.begin(serviceUS, 1);  // serviceMS to run every 0.000001 seconds
-	Serial.println("Started");
-	myObject.setPoints( 1, 2, 30, 7 );
 	Serial.begin(9600);
+	Serial.println("Started after 2 second delay.");
+	Serial.print("Size of RGBA8: ");
+	Serial.println(PIXELMEMSIZE);
+
+	myTimer.begin(serviceUS, 1);  // serviceMS to run every 0.000001 seconds
+	//myObject.setPoints( 1, 2, 30, 7 );
 	leds.begin();
-	mainPage.setPixelXY(10,0,RED);
-	mainPage.setPixelXY(1,1,GREEN);
-	mainPage.setPixelXY(2,2,BLUE);
-	mainPage.setPixelXY(3,2,YELLOW);
-	draw.dot( &dotLayer, 2.3, 2.2, RED );
+	//mainPage.setPixelXY(10,0,RED);
+	//mainPage.setPixelXY(1,1,GREEN);
+	//mainPage.setPixelXY(2,2,BLUE);
+	//mainPage.setPixelXY(3,2,YELLOW);
+	//draw.dot( &dotLayer, 2.3, 2.2, RED );
 	mainPage.setLayer( &myLayer, 0 );//Set myLayer as top
 	mainPage.setLayer( &dotLayer, 1 );//
 	mainPage.setLayer( &fullLayer, 2 );//
-	mainPage.setLayerOffset( 0, 2, 2 );//Position layer 0 at +2, +2
-	mainPage.setLayerOffset( 1, 8, 1 );//Position layer 0 at +2, +2
+	mainPage.setLayerOffset( 0, 3, 2 );//Position layer 0 at +2, +2
+	mainPage.setLayerOffset( 1, 6, 1 );//Position layer 0 at +2, +2
+	mainPage.setLayerOffset( 2, 0, 0 );//Position layer 0 at +2, +2
+	
+	myLayer.debugClear();
+	dotLayer.debugClear();
 	mainPage.show();
-
+	Serial.println("Setup loop completing.");
+		RGBA8 tempColor;
+		tempColor.red = 100;
+		tempColor.green = 0;
+		tempColor.blue = 0;
+		tempColor.alpha = 255;
+		
+		draw.dot( &fullLayer, 12.5, 3.1, &tempColor );
+		mainPage.show();
+		//while(1);
 
 }
 
 void loop()
 {
+	RGBA8 tempColor;
 	//linex1 += x1Delta;
 	//liney1 += y1Delta;
 	//linex2 += x2Delta;
@@ -202,6 +222,18 @@ void loop()
 		{
 			y3Delta *= -1;
 		}
+		
+		dotx4 += x4Delta;
+		doty4 += y4Delta;
+	
+		if(( dotx4 >= 31 )||( dotx4 <= 0 ))
+		{
+			x4Delta *= -1;
+		}
+		if(( doty4 >= 7 )||( doty4 <= 0 ))
+		{
+			y4Delta *= -1;
+		}
 	}
 	if(drawTimer.flagStatus() == PENDING)
 	{
@@ -209,13 +241,34 @@ void loop()
 		fullLayer.clear();
 		if( debugBlink )
 		{
-			fullLayer.setPixelXY(0,0,RED);
+			tempColor.red = 100;
+			tempColor.green = 0;
+			tempColor.blue = 0;
+			tempColor.alpha = 255;
 		}
 		else
 		{
-			fullLayer.setPixelXY(0,0,0);
+			tempColor.red = 0;
+			tempColor.green = 0;
+			tempColor.blue = 0;
+			tempColor.alpha = 255;
 		}
-		draw.dot( &fullLayer, dotx3, doty3, RED );
+		mainPage.clear();
+		fullLayer.clear();
+		fullLayer.setPixelXY(0,0, &tempColor);
+		
+		tempColor.red = 32;
+		tempColor.green = 0;
+		tempColor.blue = 0;
+		tempColor.alpha = 255;
+		draw.dot( &fullLayer, dotx3, doty3, &tempColor );
+		
+		tempColor.red = 0;
+		tempColor.green = 32;
+		tempColor.blue = 0;
+		tempColor.alpha = 255;
+		draw.dot( &fullLayer, dotx4, doty4, &tempColor );
+		
 		mainPage.show();
 	}
 	
