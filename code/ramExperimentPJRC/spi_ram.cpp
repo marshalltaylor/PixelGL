@@ -67,7 +67,7 @@ void SpiRam::initialize()
 
 }
 
-#define SPISETTING SPISettings(20000000, MSBFIRST, SPI_MODE0)
+#define SPISETTING SPISettings(25000000, MSBFIRST, SPI_MODE0)
 
 void SpiRam::read(uint32_t offset, uint32_t count, int16_t *data)
 {
@@ -147,6 +147,7 @@ void SpiRam::test( uint32_t *usTicks )
 	int16_t temp1 = 0x1002;  //Make a variable with distinct pattern
 	int16_t *refPtr;  //Make unassigned pointer
 	refPtr = &temp1;  //pointer (no star) = address of
+	Serial.print("Address of usTicks: ");
 	Serial.println(*refPtr, HEX);  //Print the thing the pointer points to
 	write(0,1,refPtr);
 	temp1 = 0x3004;
@@ -159,7 +160,8 @@ void SpiRam::test( uint32_t *usTicks )
 	//Tires are warm. approach the starting line
 	time1 = *usTicks;
 	temp1 = 0xF5AA;
-	Serial.println(*usTicks);
+	Serial.print("Start usTicks count (time1): ");
+	Serial.println(time1);
 	Serial.print("Writing... ");
 	for( int i = 0; i < 0x20000; i += 2 )
 	{
@@ -168,6 +170,8 @@ void SpiRam::test( uint32_t *usTicks )
 	}
 	Serial.println("Done");
 	time2 = *usTicks;
+	Serial.print("usTicks count (time2): ");
+	Serial.println(time2);
 	Serial.print("Reading... ");
 	for( int i = 0; i < 0x20000; i += 2 )
 	{
@@ -176,7 +180,9 @@ void SpiRam::test( uint32_t *usTicks )
 	}
 	time3 = *usTicks;
 	Serial.println("Done");
-	
+	Serial.print("usTicks count (time3): ");
+	Serial.println(time3);
+
 	//Now assess data
 	for( int i = 0; i < 0x20000; i += 2 )
 	{
