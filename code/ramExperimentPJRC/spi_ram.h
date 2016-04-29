@@ -39,6 +39,7 @@ public:
 	SpiRam( void );
 	void initialize();
 	void test( uint32_t *target );
+	void dump( void );
 private:
 	void read(uint32_t address, uint32_t count, int16_t *data);
 	void write(uint32_t address, uint32_t count, const int16_t *data);

@@ -161,7 +161,8 @@ void setup() {
 	
 	draw.dot( &fullLayer, 12.5, 3.1, &tempColor );
 	mainPage.show();
-	//while(1);
+	delay(4000);
+	testRam.dump();
 
 }
 

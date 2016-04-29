@@ -37,6 +37,7 @@
   This test is useful for checking if your LED strips work, and which
   color config (WS2811_RGB, WS2811_GRB, etc) they require.
 */
+
 // Use these with the audio adaptor board
 #include <OctoWS2811.h>
 #include "hwLayer.h"
@@ -72,6 +73,10 @@ uint8_t usTicksLocked = 1; //start locked out
 uint8_t debugBlink = 0;
 
 
+#include "pixelPhysicals.h"
+
+// pixelPhysicals.cpp
+extern const float pixelPhysicalData[124];
 
 
 
@@ -98,28 +103,6 @@ viewpage mainPage(&leds);
 #define ORANGE 0x080800
 #define WHITE  0x0F0F0F
 
-float xBallDelta[15] = {0.012,0.023,0.015,0.032,0.008,0.054,0.023,0.028,0.024,0.018,0.032,0.011,0.012,0.013,0.014};
-float yBallDelta[15] = {0.013,0.020,0.008,0.054,0.023,0.028,0.024,0.018,0.032,0.011,0.012,0.013,0.014,0.032,0.008};
-
-float xBall[15] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-float yBall[15] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-
-float x1Delta = .02;
-float y1Delta = .02;
-float dotx1 = 1;
-float doty1 = 2;
-
-float x2Delta = .03;
-float y2Delta = .04;
-float dotx2 = 1;
-float doty2 = 2;
-
-
-Layer myLayer( 0,0,3,2 );
-Layer dotLayer( 0,0,5,5 );
-Layer lineLayer( -2,-2,34,10 );
-Layer fullLayer( -2,-2,34,10 );
-
 PaintTools draw;
 
 void setup() {
@@ -133,24 +116,8 @@ void setup() {
 	Serial.print("Size of RGBA8: ");
 	Serial.println(PIXELMEMSIZE);
 
-	//myObject.setPoints( 1, 2, 30, 7 );
 	leds.begin();
-	//mainPage.setPixelXY(10,0,RED);
-	//mainPage.setPixelXY(1,1,GREEN);
-	//mainPage.setPixelXY(2,2,BLUE);
-	//mainPage.setPixelXY(3,2,YELLOW);
-	//draw.dot( &dotLayer, 2.3, 2.2, RED );
-	mainPage.setLayer( &myLayer, 0 );//Set myLayer as top
-	mainPage.setLayer( &dotLayer, 1 );//
-	mainPage.setLayer( &lineLayer, 2 );//
-	mainPage.setLayer( &fullLayer, 3 );//
-	mainPage.setLayerOffset( 0, 2, 0 );//Position layer 0 at +2, +2
-	mainPage.setLayerOffset( 1, 6, 1 );//Position layer 0 at +2, +2
-	mainPage.setLayerOffset( 2, 0, 0 );//Position layer 0 at +2, +2
-	mainPage.setLayerOffset( 3, 0, 0 );
-	
-	myLayer.clear();
-	dotLayer.clear();
+
 	mainPage.show();
 	Serial.println("Setup loop completing.");
 	RGBA8 tempColor;
@@ -159,7 +126,7 @@ void setup() {
 	tempColor.blue = 0;
 	tempColor.alpha = 255;
 	
-	draw.dot( &fullLayer, 12.5, 3.1, &tempColor );
+	//draw.dot( &fullLayer, 12.5, 3.1, &tempColor );
 	mainPage.show();
 	//while(1);
 
@@ -168,35 +135,8 @@ void setup() {
 void loop()
 {
 	RGBA8 tempColor;
-	//linex1 += x1Delta;
-	//liney1 += y1Delta;
-	//linex2 += x2Delta;
-	//liney2 += y2Delta;
-    //
-	//if(( linex1 >= 31 )||( linex1 <= 0 ))
-	//{
-	//	x1Delta *= -1;
-	//}
-	//if(( linex2 >= 31 )||( linex2 <= 0 ))
-	//{
-	//	x2Delta *= -1;
-	//}
-	//if(( liney1 >= 7 )||( liney1 <= 0 ))
-	//{
-	//	y1Delta *= -1;
-	//}
-	//if(( liney2 >= 7 )||( liney2 <= 0 ))
-	//{
-	//	y2Delta *= -1;
-	//}
-	//delay(200);
-	//mainPage.clear();
-	//myObject.setPoints( linex1, liney1, linex2, liney2 );
-	//mainPage.setPixelXY(linex1, liney1,RED);
-	//mainPage.setPixelXY(linex2, liney2,GREEN);  
-	//mainPage.show();
 	
-		//Update the timers, but only once per interrupt
+	//Update the timers, but only once per interrupt
 	if( usTicksLocked == 0 )
 	{
 		//**Copy to make a new timer******************//  
@@ -220,81 +160,12 @@ void loop()
 	if(dotTimer.flagStatus() == PENDING)
 	{
 		//User code
-		dotx1 += x1Delta;
-		doty1 += y1Delta;
-	
-		if(( dotx1 >= 31 )||( dotx1 <= 0 ))
-		{
-			x1Delta *= -1;
-		}
-		if(( doty1 >= 15 )||( doty1 <= -4 ))
-		{
-			y1Delta *= -1;
-		}
-		
-		dotx2 += x2Delta;
-		doty2 += y2Delta;
-	
-		if(( dotx2 >= 31 )||( dotx2 <= 0 ))
-		{
-			x2Delta *= -1;
-		}
-		if(( doty2 >= 15 )||( doty2 <= -4 ))
-		{
-			y2Delta *= -1;
-		}
-		
-		for( int i = 0; i < 15; i++ )
-		{
-			xBall[i] += xBallDelta[i];
-			yBall[i] += yBallDelta[i];
-			if(( xBall[i] >= 31 )||( xBall[i] < 0 ))
-			{
-				xBallDelta[i] *= -1;
-			}
-			yBall[i] += yBallDelta[i];
-			if(( yBall[i] >= 15 )||( yBall[i] < -4 ))
-			{
-				yBallDelta[i] *= -1;
-			}			
-		}		
 		
 	}
 	if(drawTimer.flagStatus() == PENDING)
 	{
 		//User code
 		mainPage.clear();
-		lineLayer.clear();
-		fullLayer.clear();
-
-		//Balls
-		tempColor.red = 12;
-		tempColor.green = 5;
-		tempColor.blue = 10;
-		tempColor.alpha = 255;
-		for( int i = 0; i < 15; i++ )
-		{
-			draw.dot( &fullLayer, xBall[i], yBall[i], &tempColor );
-		}
-		
-		//Line
-		tempColor.red = 12;
-		tempColor.green = 12;
-		tempColor.blue = 12;
-		tempColor.alpha = 255;
-		draw.line( &lineLayer, dotx1, doty1, dotx2, doty2, &tempColor );
-		
-		tempColor.red = 32;
-		tempColor.green = 0;
-		tempColor.blue = 0;
-		tempColor.alpha = 255;
-		draw.dot( &fullLayer, dotx1, doty1, &tempColor );
-		
-		tempColor.red = 0;
-		tempColor.green = 32;
-		tempColor.blue = 0;
-		tempColor.alpha = 255;
-		draw.dot( &fullLayer, dotx2, doty2, &tempColor );
 		
 		//debug
 		if( debugBlink )
@@ -311,7 +182,7 @@ void loop()
 			tempColor.blue = 0;
 			tempColor.alpha = 255;
 		}
-		fullLayer.setPixelXY(0,0, &tempColor);
+		mainPage.setPixelXY(0,0, &tempColor);
 		
 		mainPage.show();
 	}

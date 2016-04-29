@@ -78,7 +78,7 @@ void SpiRam::read(uint32_t offset, uint32_t count, int16_t *data)
 	SPI.transfer16((0x03 << 8) | (addr >> 16));
 	SPI.transfer16(addr & 0xFFFF);
 	while (count) {
-		*data++ = (int16_t)(SPI.transfer16(0));
+		*data++ = (int16_t)(SPI.transfer(0));//Was 16
 		count--;
 	}
 	digitalWriteFast(SPIRAM_CS_PIN, HIGH);
@@ -264,6 +264,34 @@ void SpiRam::test( uint32_t *usTicks )
 	
 	
 	
+	
+}
+
+//This uses print
+void SpiRam::dump( void )
+{
+	Serial.println("Dumping...");
+	int16_t temp1 = 0x0000;  //Make a variable with distinct pattern
+	int16_t *refPtr;  //Make unassigned pointer
+	refPtr = &temp1;  //pointer (no star) = address of
+	int16_t linecounter = 15;
+	for( int i = 0; i < 0x20000; i += 1 )
+	{
+		linecounter++;
+		if(linecounter > 15)
+		{
+			Serial.println();
+			Serial.print("0x");
+			Serial.print(i, HEX);
+			Serial.print(": ");
+			linecounter = 0;
+			delay(1);
+		}
+		read(i,1,refPtr);
+		Serial.print((uint16_t)*refPtr, HEX);
+		Serial.print(" ");
+		
+	}
 	
 }
 
