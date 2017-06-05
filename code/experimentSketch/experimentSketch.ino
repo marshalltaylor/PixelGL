@@ -45,8 +45,8 @@
 #include "Wire.h"
 
 //Globals
-uint32_t MAXTIMER = 60000000;
-uint32_t MAXINTERVAL = 2000000;
+uint32_t maxTimer = 60000000;
+uint32_t maxInterval = 2000000;
 
 #define LEDPIN 13
 #include "timerModule32.h"
@@ -314,9 +314,9 @@ void loop()
 void serviceUS(void)
 {
   uint32_t returnVar = 0;
-  if(usTicks >= ( MAXTIMER + MAXINTERVAL ))
+  if(usTicks >= ( maxTimer + maxInterval ))
   {
-    returnVar = usTicks - MAXTIMER;
+    returnVar = usTicks - maxTimer;
 
   }
   else
