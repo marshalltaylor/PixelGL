@@ -31,6 +31,15 @@ void RGBA8::clear( void )
 	
 }
 
+void RGBA8::copy( RGBA8 * inputColor )
+{
+	red = inputColor->red;
+	green = inputColor->green;
+	blue = inputColor->blue;
+	alpha = inputColor->alpha;
+	
+}
+
 
 //**********************************************************************//
 //

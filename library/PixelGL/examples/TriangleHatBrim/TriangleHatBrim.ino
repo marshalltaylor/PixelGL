@@ -198,7 +198,7 @@ void loop()
 		if( bootSequenceCounter > 3 )
 		{
 			outputMixer.gradientAddLayer( point1, 0, point2, 23 );
-			outputMixer.gradientAddLayer( point2, 23, point3, 47 );
+			outputMixer.gradientAddLayer( point2, 24, point3, 47 );
 			outputMixer.gradientAddLayer( point3, 48, point1, 71 );
 		}
 		

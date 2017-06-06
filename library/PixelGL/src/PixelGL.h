@@ -30,6 +30,7 @@ public:
   
   RGBA8( void );
   void clear( void );
+  void copy( RGBA8 * inputColor );
 };
 
 class BrushPixel : public RGBA8
