@@ -34,6 +34,7 @@ public:
 	uint16_t mode = 0;
 
 	RGBA8 bgColor1;
+	RGBA8 featherColor1;
 	RGBA8 color1;
 	RGBA8 color2;
 	RGBA8 color3;

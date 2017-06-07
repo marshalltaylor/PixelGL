@@ -63,7 +63,10 @@ CustomPanel hatPanel;
 
 #define WS2812PIN 3
 ColorMixer outputMixer(72, WS2812PIN, NEO_GRB + NEO_KHZ800);
+#define FEATHERPIN 6
+ColorMixer featherMixer(30, FEATHERPIN, NEO_GRB + NEO_KHZ800);
 float rainbowRotateFloat = 0;
+float featherRotateFloat = 0;
 
 void setup()
 {
@@ -82,6 +85,9 @@ void setup()
 
 	outputMixer.begin();
 	outputMixer.show();			
+
+	featherMixer.begin();
+	featherMixer.show();			
 
 }
 RGBA8 blackMask;
@@ -123,6 +129,14 @@ void loop()
 				rainbowRotateFloat = rainbowRotateFloat - 72;
 			}
 		}
+		if( hatPanel.rainbowRate > 10 )
+		{
+			featherRotateFloat = featherRotateFloat + 30 * (float)hatPanel.rainbowRate / 1023;
+			while( featherRotateFloat >= 30 )
+			{
+				featherRotateFloat = featherRotateFloat - 30;
+			}
+		}
 	}
 	if(ledOutputTimer.flagStatus() == PENDING)
 	{
@@ -136,12 +150,20 @@ void loop()
 			outputMixer.clearPage();
 			outputMixer.addLayer(hatPanel.bgColor1);
 			outputMixer.addLayer(blackMask);
+
+			featherMixer.clearPage();
+			featherMixer.addLayer(hatPanel.featherColor1);
+			featherMixer.addLayer(blackMask);
 			break;
 		case 1:
 		blackMask.alpha = (255 * (int32_t)(1023 - hatPanel.backgroundBrightness)) / 1023;
 			outputMixer.clearPage();
 			outputMixer.addLayer(hatPanel.bgColor1);
 			outputMixer.addLayer(blackMask);
+
+			featherMixer.clearPage();
+			featherMixer.addLayer(hatPanel.featherColor1);
+			featherMixer.addLayer(blackMask);
 			break;	
 		case 2:
 			point1.copy( &hatPanel.color1 );
@@ -169,6 +191,8 @@ void loop()
 		//Push the output
 		outputMixer.mix();
 		outputMixer.show();
+		featherMixer.mix();
+		featherMixer.show();
 	}
 	
 }

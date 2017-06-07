@@ -55,12 +55,25 @@ void CustomPanel::tickStateMachine( int msTicksDelta )
 				bgColor1.blue = 255;
 				bgColor1.red = 255;
 				bgColor1.alpha = 10;
+
+				featherColor1.green = 0;
+				featherColor1.blue = 255;
+				featherColor1.red = 110;
+				featherColor1.alpha = 40;
+				
 				break;
 			case 1:
 				bgColor1.green = 0;
 				bgColor1.blue = 255;
 				bgColor1.red = 180;
 				bgColor1.alpha = 40;
+
+				featherColor1.green = 255;
+				featherColor1.blue = 0;
+				featherColor1.red = 80;
+				featherColor1.alpha = 40;
+
+
 				break;	
 			case 2:
 				color1.green = 80;
