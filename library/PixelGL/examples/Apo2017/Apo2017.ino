@@ -225,9 +225,9 @@ void loop()
 			}
 			outputMixer.rotate( rainbowRotateFloat );
 
-			point1.copy( &hatPanel.color1 );
+			point1.copy( &hatPanel.featherColor1 );
 			point1.alpha = (point1.alpha * (uint16_t)hatPanel.rainbowBrightness) / 1023;
-			point2.copy( &hatPanel.color2 );
+			point2.copy( &hatPanel.featherColor2 );
 			point2.alpha = (point2.alpha * (uint16_t)hatPanel.rainbowBrightness) / 1023;
 			featherMixer.gradientAddLayer( point1, 0, point2, 6 );
 			featherMixer.gradientAddLayer( point2, 7, point3, 14 );

@@ -50,6 +50,13 @@ public:
 	
 };
 
+class ColorMaker
+{
+public:
+	ColorMaker( void );
+	void makeColor( uint16_t, RGBA8 * ); //Takes 10 bit knob value //Operates on passed color
+};
+
 class ColorMixer : public Adafruit_NeoPixel
 {
 public:

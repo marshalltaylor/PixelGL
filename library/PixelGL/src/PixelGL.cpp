@@ -40,6 +40,33 @@ void RGBA8::copy( RGBA8 * inputColor )
 	
 }
 
+ColorMaker::ColorMaker( void ){};
+
+void ColorMaker::makeColor( uint16_t input, RGBA8 * output ) //Operates on passed color
+{
+	int16_t temp;
+	if( input < 342 )
+	{
+		temp = input; // 0 to 341
+		output->red = 255*(345-temp)/347;
+		output->green = 255*(temp-345)/347;
+		output->blue = 0;
+	}
+	else if( input < 682 )
+	{
+		temp = input - 340; // 0 to 341
+		output->red = 0;
+		output->green = 255*(345-temp)/347;
+		output->blue = 255*(temp-345)/347;
+	}
+	else
+	{
+		temp = input - 680; // 0 to 341
+		output->red = 255*(temp-345)/347;
+		output->green = 0;
+		output->blue = 255*(345-temp)/347;
+	}
+}
 
 //**********************************************************************//
 //

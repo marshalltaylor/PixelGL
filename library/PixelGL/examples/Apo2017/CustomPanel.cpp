@@ -105,6 +105,17 @@ void CustomPanel::tickStateMachine( int msTicksDelta )
 			bgColor1.blue = 255;
 			bgColor1.red = 255;
 			bgColor1.alpha = 10;
+
+			featherColor1.green = 30;
+			featherColor1.blue = 30;
+			featherColor1.red = 30;
+			featherColor1.alpha = 40;
+
+			featherColor2.green = 127;
+			featherColor2.blue = 127;
+			featherColor2.red = 127;
+			featherColor2.alpha = 40;
+
 			break;		
 		case 3:
 			color1.green = 140;
@@ -126,6 +137,17 @@ void CustomPanel::tickStateMachine( int msTicksDelta )
 			bgColor1.blue = 0;
 			bgColor1.red = 0;
 			bgColor1.alpha = 10;
+
+			featherColor1.green = 0;
+			featherColor1.blue = 255;
+			featherColor1.red = 80;
+			featherColor1.alpha = 40;
+
+			featherColor2.green = 127;
+			featherColor2.blue = 127;
+			featherColor2.red = 127;
+			featherColor2.alpha = 40;
+
 			break;		
 		default:
 			break;
@@ -139,33 +161,7 @@ void CustomPanel::tickStateMachine( int msTicksDelta )
 	switch( state )
 	{
 	case PInit:
-		nextState = PBackgroundBrightness;
-		break;
-	case PBackgroundBrightness:
-		if( dataKnob.serviceChanged() )
-		{
-			Serial.print("backgroundBrightness: ");
-			Serial.println(dataKnob.getState());
-			backgroundBrightness = dataKnob.getState();
-		}
-		if( modeButton.serviceRisingEdge() )
-		{
-			nextState = PRainbowBrightness;
-			greenWash.trigger();
-		}
-		break;		
-	case PRainbowBrightness:
-		if( dataKnob.serviceChanged() )
-		{
-			Serial.print("rainbowBrightness: ");
-			Serial.println(dataKnob.getState());
-			rainbowBrightness = dataKnob.getState();
-		}
-		if( modeButton.serviceRisingEdge() )
-		{
-			nextState = PRate1;
-			greenWash.trigger();
-		}
+		nextState = PRate1;
 		break;
 	case PRate1:
 		if( dataKnob.serviceChanged() )
@@ -177,8 +173,112 @@ void CustomPanel::tickStateMachine( int msTicksDelta )
 		}
 		if( modeButton.serviceRisingEdge() )
 		{
-			nextState = PRate2;
+			nextState = PRainbowBrightness;
 			greenWash.trigger();
+		}
+		break;
+	case PRainbowBrightness:
+		if( dataKnob.serviceChanged() )
+		{
+			Serial.print("rainbowBrightness: ");
+			Serial.println(dataKnob.getState());
+			rainbowBrightness = dataKnob.getState();
+		}
+		if( modeButton.serviceRisingEdge() )
+		{
+			nextState = PBGColor;
+			greenWash.trigger();
+		}
+		break;
+	case PBGColor:
+		if( dataKnob.serviceChanged() )
+		{
+			myColorMaker.makeColor( dataKnob.getState(), &bgColor1 );
+			bgColor1.alpha = 100;
+			
+		}
+		if( modeButton.serviceRisingEdge() )
+		{
+			nextState = PBackgroundBrightness;
+			greenWash.trigger();
+		}
+		break;
+	case PBackgroundBrightness:
+		if( dataKnob.serviceChanged() )
+		{
+			Serial.print("backgroundBrightness: ");
+			Serial.println(dataKnob.getState());
+			backgroundBrightness = dataKnob.getState();
+		}
+		if( modeButton.serviceRisingEdge() )
+		{
+			nextState = PColor1;
+			blueWash.trigger();
+		}
+		break;		
+	case PColor1:
+		if( dataKnob.serviceChanged() )
+		{
+			myColorMaker.makeColor( dataKnob.getState(), &color1 );
+			color1.alpha = 80;
+			
+		}
+		if( modeButton.serviceRisingEdge() )
+		{
+			nextState = PColor2;
+			greenWash.trigger();
+		}
+		break;
+	case PColor2:
+		if( dataKnob.serviceChanged() )
+		{
+			myColorMaker.makeColor( dataKnob.getState(), &color2 );
+			color2.alpha = 80;
+			
+		}
+		if( modeButton.serviceRisingEdge() )
+		{
+			nextState = PColor3;
+			greenWash.trigger();
+		}
+		break;
+	case PColor3:
+		if( dataKnob.serviceChanged() )
+		{
+			myColorMaker.makeColor( dataKnob.getState(), &color3 );
+			color3.alpha = 80;
+			
+		}
+		if( modeButton.serviceRisingEdge() )
+		{
+			nextState = PFeatherColor1;
+			greenWash.trigger();
+		}
+		break;
+	case PFeatherColor1:
+		if( dataKnob.serviceChanged() )
+		{
+			myColorMaker.makeColor( dataKnob.getState(), &featherColor1 );
+			featherColor1.alpha = 80;
+			
+		}
+		if( modeButton.serviceRisingEdge() )
+		{
+			nextState = PFeatherColor2;
+			greenWash.trigger();
+		}
+		break;
+	case PFeatherColor2:
+		if( dataKnob.serviceChanged() )
+		{
+			myColorMaker.makeColor( dataKnob.getState(), &featherColor2 );
+			featherColor2.alpha = 80;
+			
+		}
+		if( modeButton.serviceRisingEdge() )
+		{
+			nextState = PRate2;
+			blueWash.trigger();
 		}
 		break;
 	case PRate2:
@@ -188,8 +288,8 @@ void CustomPanel::tickStateMachine( int msTicksDelta )
 		}
 		if( modeButton.serviceRisingEdge() )
 		{
-			nextState = PSparkleMode;
-			greenWash.trigger();
+			nextState = PRate1;
+			redWash.trigger();
 
 		}
 		break;
@@ -200,7 +300,7 @@ void CustomPanel::tickStateMachine( int msTicksDelta )
 		}
 		if( modeButton.serviceRisingEdge() )
 		{
-			nextState = PBackgroundBrightness;
+			nextState = PRate1;
 			redWash.trigger();
 
 		}

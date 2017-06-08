@@ -12,9 +12,15 @@
 enum PStates
 {
 	PInit,
-	PBackgroundBrightness,
-	PRainbowBrightness,
 	PRate1,
+	PRainbowBrightness,
+	PBGColor,
+	PBackgroundBrightness,
+	PColor1,
+	PColor2,
+	PColor3,
+	PFeatherColor1,
+	PFeatherColor2,
 	PRate2,
 	PSparkleMode
 };
@@ -38,10 +44,11 @@ public:
 	uint16_t sparkleMode = 1;
 	
 	RGBA8 bgColor1;
-	RGBA8 featherColor1;
 	RGBA8 color1;
 	RGBA8 color2;
 	RGBA8 color3;
+	RGBA8 featherColor1;
+	RGBA8 featherColor2;
 	
 private:
 	//Internal Panel Components
@@ -53,6 +60,7 @@ private:
 	//State machine stuff  
 	PStates state;
 
+	ColorMaker myColorMaker;
 };
 
 #endif
