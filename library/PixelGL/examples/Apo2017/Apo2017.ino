@@ -42,11 +42,22 @@ uint32_t usTicks = 0;
 TimerClass32 inputTickTimer( INPUT_TICK_US );
 TimerClass32 debugTimer( 1000000 );
 TimerClass32 ledOutputTimer( 5000 ); //For updating LEDs
-TimerClass32 sparkleTimer( 2000 ); //For general output use
-TimerClass32 washOutTimer( 10000 );
+//TimerClass32 sparkleTimer( 2000 ); //For general output use
+TimerClass32 washOutTimer( 3000 );
 TimerClass32 rainbowRotateTimer( 30000 );
 
 uint8_t usTicksLocked = 1; //start locked out
+
+FlashDialog messages;
+float pointBrightness = 0;
+BrushPixel sparklePage[50];
+uint8_t sparkleCounter = 0;
+uint8_t sparkleCounterMax = 100;
+
+WashOut redWash;
+WashOut greenWash;
+WashOut blueWash;
+
 
 enum MStates
 {
@@ -64,12 +75,25 @@ CustomPanel hatPanel;
 #define WS2812PIN 3
 ColorMixer outputMixer(72, WS2812PIN, NEO_GRB + NEO_KHZ800);
 #define FEATHERPIN 6
-ColorMixer featherMixer(30, FEATHERPIN, NEO_GRB + NEO_KHZ800);
+ColorMixer featherMixer(14, FEATHERPIN, NEO_GRB + NEO_KHZ800);
 float rainbowRotateFloat = 0;
 float featherRotateFloat = 0;
 
 void setup()
 {
+	//Make up the washes
+	redWash.targetColor.red = 255;
+	redWash.targetColor.alpha = 200;
+	redWash.aRate = 200;
+	redWash.rRate = 600;
+	greenWash.targetColor.green = 255;
+	greenWash.targetColor.alpha = 100;
+	greenWash.aRate = 200;
+	greenWash.rRate = 400;
+	blueWash.targetColor.blue = 255;
+	blueWash.targetColor.alpha = 100;
+
+	
 	state = MInit;
 
 	Serial.begin(115200);
@@ -104,6 +128,8 @@ void loop()
 		debugTimer.update(usTicks);
 		ledOutputTimer.update(usTicks);
 		rainbowRotateTimer.update(usTicks);
+		//sparkleTimer.update(usTicks);
+		washOutTimer.update(usTicks);
 		
 		usTicksLocked = 1;
 	}  //The ISR will unlock.
@@ -131,41 +157,30 @@ void loop()
 		}
 		if( hatPanel.rainbowRate > 10 )
 		{
-			featherRotateFloat = featherRotateFloat + 30 * (float)hatPanel.rainbowRate / 1023;
-			while( featherRotateFloat >= 30 )
+			featherRotateFloat = featherRotateFloat - 15 * (float)hatPanel.featherRate / 1023;
+			while( featherRotateFloat < 0 )
 			{
-				featherRotateFloat = featherRotateFloat - 30;
+				featherRotateFloat = featherRotateFloat + 30;
 			}
 		}
 	}
 	if(ledOutputTimer.flagStatus() == PENDING)
 	{
-		stateTimeKeeper.uIncrement(INPUT_TICK_US);
+		outputMixer.clearPage();
+		featherMixer.clearPage();
 
-		MStates nextState = state;
-		switch( hatPanel.mode )
+		int temp = hatPanel.mode;
+		if( (temp==0) || (temp==1) )
 		{
-		case 0:
 			blackMask.alpha = (255 * (int32_t)(1023 - hatPanel.backgroundBrightness)) / 1023;
-			outputMixer.clearPage();
 			outputMixer.addLayer(hatPanel.bgColor1);
 			outputMixer.addLayer(blackMask);
 
-			featherMixer.clearPage();
 			featherMixer.addLayer(hatPanel.featherColor1);
 			featherMixer.addLayer(blackMask);
-			break;
-		case 1:
-		blackMask.alpha = (255 * (int32_t)(1023 - hatPanel.backgroundBrightness)) / 1023;
-			outputMixer.clearPage();
-			outputMixer.addLayer(hatPanel.bgColor1);
-			outputMixer.addLayer(blackMask);
-
-			featherMixer.clearPage();
-			featherMixer.addLayer(hatPanel.featherColor1);
-			featherMixer.addLayer(blackMask);
-			break;	
-		case 2:
+		}
+		if( (temp==2) || (temp==3) )
+		{
 			point1.copy( &hatPanel.color1 );
 			point1.alpha = (point1.alpha * (uint16_t)hatPanel.rainbowBrightness) / 1023;
 			point2.copy( &hatPanel.color2 );
@@ -175,24 +190,78 @@ void loop()
 			point4.copy( &hatPanel.bgColor1 );
 			point4.alpha = (point4.alpha * (uint16_t)hatPanel.backgroundBrightness) / 1023;
            
-			outputMixer.clearPage();
 			outputMixer.addLayer(point4);
-			
-			outputMixer.gradientAddLayer( point1, 0, point2, 23 );
-			outputMixer.gradientAddLayer( point2, 24, point3, 47 );
-			outputMixer.gradientAddLayer( point3, 48, point1, 71 );
-			
-			outputMixer.rotate( rainbowRotateFloat );
-			break;		
+			switch( hatPanel.squeeze )
+			{
+				case 0:
+					outputMixer.gradientAddLayer( point1, 0, point2, 23 );
+					outputMixer.gradientAddLayer( point2, 24, point3, 47 );
+					outputMixer.gradientAddLayer( point3, 48, point1, 71 );
+				default:
+				break;
+				case 1:
+					outputMixer.gradientAddLayer( point1, 0, point2, 11 );
+					outputMixer.gradientAddLayer( point2, 12, point3, 23 );
+					outputMixer.gradientAddLayer( point3, 24, point1, 35 );
+					outputMixer.gradientAddLayer( point1, 36, point2, 47 );
+					outputMixer.gradientAddLayer( point2, 48, point3, 59 );
+					outputMixer.gradientAddLayer( point3, 60, point1, 71 );
+				break;
+				case 2:
+					outputMixer.gradientAddLayer( point1, 0, point2, 5 );
+					outputMixer.gradientAddLayer( point2, 6, point3, 11 );
+					outputMixer.gradientAddLayer( point3, 12, point1, 17 );
+					outputMixer.gradientAddLayer( point1, 18, point2, 23 );
+					outputMixer.gradientAddLayer( point2, 24, point3, 29 );
+					outputMixer.gradientAddLayer( point3, 30, point1, 35 );
+					outputMixer.gradientAddLayer( point1, 36, point2, 41 );
+					outputMixer.gradientAddLayer( point2, 42, point3, 47 );
+					outputMixer.gradientAddLayer( point3, 48, point1, 53 );
+					outputMixer.gradientAddLayer( point1, 54, point2, 59 );
+					outputMixer.gradientAddLayer( point2, 60, point3, 65 );
+					outputMixer.gradientAddLayer( point3, 66, point1, 71 );
 
-		default:
-			break;
+				break;
+			}
+			outputMixer.rotate( rainbowRotateFloat );
+
+			point1.copy( &hatPanel.color1 );
+			point1.alpha = (point1.alpha * (uint16_t)hatPanel.rainbowBrightness) / 1023;
+			point2.copy( &hatPanel.color2 );
+			point2.alpha = (point2.alpha * (uint16_t)hatPanel.rainbowBrightness) / 1023;
+			featherMixer.gradientAddLayer( point1, 0, point2, 6 );
+			featherMixer.gradientAddLayer( point2, 7, point3, 14 );
+			featherMixer.rotate( featherRotateFloat );
+
 		}
+
+		point1.red = ((uint16_t)redWash.outputColor.red * (uint16_t)redWash.outputColor.alpha) >> 8;
+		point1.green = ((uint16_t)greenWash.outputColor.green * (uint16_t)greenWash.outputColor.alpha) >> 8;
+		point1.blue = ((uint16_t)blueWash.outputColor.blue * (uint16_t)blueWash.outputColor.alpha) >> 8;
+		
+		//get biggest alpha
+		uint8_t maxAlpha = 0;
+		if( redWash.outputColor.alpha > maxAlpha ) maxAlpha = redWash.outputColor.alpha;
+		if( greenWash.outputColor.alpha > maxAlpha ) maxAlpha = greenWash.outputColor.alpha;
+		if( blueWash.outputColor.alpha > maxAlpha ) maxAlpha = blueWash.outputColor.alpha;
+		point1.alpha = maxAlpha;
+		
+		outputMixer.addLayer( point1 );
+
 		//Push the output
 		outputMixer.mix();
 		outputMixer.show();
 		featherMixer.mix();
 		featherMixer.show();
+	}
+	if (washOutTimer.flagStatus() == PENDING )
+	{
+		//Service all the washouts
+		redWash.tick();
+		greenWash.tick();
+		blueWash.tick();
+
+
 	}
 	
 }
