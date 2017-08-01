@@ -52,14 +52,18 @@ uint16_t maxInterval = 2000;
 #define WS2812PIN 3
 ColorMixer outputMixer(16, WS2812PIN, NEO_GRB + NEO_KHZ400);
 
+
 //  Common colors
 RGBA8 bgColor1;
 RGBA8 flame10;
 RGBA8 flame15;
 RGBA8 flame20;
-
+RGBA8 flameU;
+RGBA8 cVar1;
 #include "timeKeeper.h"
 TimeKeeper stateTimeKeeper;
+TimeKeeper flickerTimeKeeper;
+
 //**Color state machines**********************//
 //int16_t bgOffset = 0;
 //FlashDialog messages;
@@ -73,6 +77,8 @@ TimeKeeper stateTimeKeeper;
 //WashOut greenWash;
 //WashOut blueWash;
 Transit utilTransit;
+Transit tTransit;
+Transit bTransit;
 
 void setup()
 {
@@ -129,6 +135,8 @@ bgColor1.blue = 0;
 bgColor1.alpha = 0;
 
 utilTransit.setColor(&bgColor1, 20);
+tTransit.setColor(&bgColor1, 20);
+bTransit.setColor(&bgColor1, 20);
 
 bgColor1.red = 30;
 bgColor1.green = 30;
@@ -150,11 +158,26 @@ flame20.green = 118;
 flame20.blue = 29;
 flame20.alpha = 200;
 
+flameU.red = 254;
+flameU.green = 118;
+flameU.blue = 29;
+flameU.alpha = 120;
+
 }
 
 
 uint8_t tState = 0;
 uint16_t control = 100;
+float holdControl = 1;
+float dwellControl = 1;
+float rateControl = 1;
+int16_t lastKnobValue = 0;
+uint8_t bTransitState = 0;
+
+uint16_t tempAlpha;
+uint16_t depth;
+uint16_t rate1;
+uint16_t rate2;
 
 void loop()
 {
@@ -181,6 +204,8 @@ void loop()
 	if(transitTimer.flagStatus() == PENDING)
 	{
 		utilTransit.tick();
+		tTransit.tick();
+		bTransit.tick();
 	}
 	
 	if (ledOutputTimer.flagStatus() == PENDING)
@@ -191,22 +216,125 @@ void loop()
 		//outputMixer.addLayer((RGBA8*)background); //Background const array or somethin'
 
 		//Build an image here
-		outputMixer.addLayer( utilTransit.outputColor );
+		if( lastKnobValue > 80 )
+		{
+			outputMixer.addLayer( utilTransit.outputColor );
+		}
 		//Serial.println(bootSequenceCounter);
 
 		outputMixer.mix();
 		outputMixer.show();
 		stateTimeKeeper.mIncrement( 5 );
+		flickerTimeKeeper.mIncrement( 5 );
 
 	}
 	if (bootSequenceTimer.flagStatus() == PENDING)
 	{
+		int16_t tempKnobValue = analogRead( A0 );
+		if(( tempKnobValue > (lastKnobValue + 50) )||(tempKnobValue < (lastKnobValue - 50) ))
+		{
+			lastKnobValue = tempKnobValue;
+//			Serial.println(lastKnobValue);
+			flameU.alpha = lastKnobValue >> 2;
+			tTransit.setColor(&flameU, 30);
+			bTransitState = 0;
+			bTransit.setColor(&flameU, 30);
+			//tState = 4;
+		}
+		if( tTransit.busy() == 0)
+		{
+//			if( random(0, 10) > 4 )
+//			{
+//				//Transit
+//				uint16_t tempAlpha = tTransit.outputColor.alpha;
+//				uint16_t depth = random( -5, 5 );
+//				uint16_t rate = random( 60, 255 );
+//				tempAlpha += depth;
+//				if( tempAlpha > 255 ) tempAlpha = 255;
+//				if( tempAlpha < 0 ) tempAlpha = 0;
+//				memcpy(&cVar1, &tTransit.outputColor, sizeof cVar1);
+//				cVar1.alpha = tempAlpha;
+//				tTransit.setColor( &cVar1, rate );
+//				
+//				tempAlpha -= 50;
+//				if( tempAlpha < 0 ) tempAlpha = 0;
+//				memcpy(&cVar1, &bTransit.outputColor, sizeof cVar1);
+//				cVar1.alpha = tempAlpha;
+//				bTransit.setColor( &cVar1, rate );
+//				
+//			}
+		}
+		if( bTransit.busy() == 0 )
+		{
+			switch( bTransitState )
+			{
+//				Serial.println("a");
+				case 0: //Idle, random
+//					Serial.println(" b");
+					if( random(0, 100) < 10 )
+					{
+						//Transit
+						if( random(0, 100) < 10 )
+						{
+							holdControl = ((float)random( 70, 100 )) / (float)100;
+						}
+						else
+						{
+							holdControl = ((float)random( 0, 40 )) / (float)100;
+						}
+						Serial.println(holdControl);
+						dwellControl = holdControl;
+//						Serial.println("boo");
+						tempAlpha = tTransit.outputColor.alpha;
+						depth = -30 - (holdControl * 100);
+						rate1 = random( 30, 50 );
+						tempAlpha += depth;
+						if( tempAlpha > 255 ) tempAlpha = 255;
+						if( tempAlpha < 0 ) tempAlpha = 0;
+						memcpy(&cVar1, &bTransit.outputColor, sizeof cVar1);
+						cVar1.alpha = tempAlpha;
+						bTransit.setColor( &cVar1, rate1 );
+						bTransitState = 1;
+						flickerTimeKeeper.mClear();
+
+					}
+				break;
+				case 1: //dwell
+//					Serial.println(" b");
+					if(flickerTimeKeeper.mGet() > ( 300 + (4000*dwellControl) ))
+					{
+						bTransitState = 2;
+					}
+				case 2: //ramp up
+//					Serial.println(" b");
+//					Serial.println("    yaa");
+					tempAlpha = tTransit.outputColor.alpha;
+					rate2 = random( 200, 255 );
+					tempAlpha -= 15;
+					if( tempAlpha < 0 ) tempAlpha = 0;
+					memcpy(&cVar1, &tTransit.outputColor, sizeof cVar1);
+					cVar1.alpha = tempAlpha;
+					bTransit.setColor( &cVar1, rate2 );
+					bTransitState = 3;
+					flickerTimeKeeper.mClear();
+				break;
+				case 3: //hold until done
+//					Serial.println(" b");
+					if(flickerTimeKeeper.mGet() > 3000 + (1200*dwellControl) )
+					{
+						bTransitState = 0;
+					}
+				break;
+				default:
+				break;
+			}
+		}
 		switch( tState )
 		{
 			case 0: //is rising
 				if( utilTransit.done() )
 				{
-					utilTransit.setColor(&flame20, 50 * control / 180);
+					utilTransit.setColor(&tTransit.outputColor, random( 5 + (3*holdControl), 8 + (3*holdControl) ) );
 					tState = 1;
 					//Serial.println("state");
 				}
@@ -219,24 +347,28 @@ void loop()
 				}
 			break;
 			case 2:
-				if(stateTimeKeeper.mGet() > (200 * control / 255))
+				if(stateTimeKeeper.mGet() > ( 50 + (100*holdControl) ))
 				{
 					tState = 3;
 				}
 			break;
 			case 3:
-				if( random(0, 10) < 3 )
-				{
-					utilTransit.setColor(&flame15, random( 280, 250 );
-				}
-				else
-				{
-					utilTransit.setColor(&flame15, 14 * control / 255);
-				}
-				control = analogRead( A5 ) >> 2;
-				control = control + random(0, 70);
+//				if( random(0, 10) < 3 )
+//				{
+//					utilTransit.setColor(&bTransit.outputColor, random( 10, 15 ));
+//				}
+//				else
+//				{
+					utilTransit.setColor(&bTransit.outputColor, 3 + (3*holdControl));
+//				}
 				tState = 0;
 			break;
+			case 4: //escape case
+				if( utilTransit.done() )
+				{
+					tState = 0;
+				}
+			
 			default:
 			tState = 0;
 		}
